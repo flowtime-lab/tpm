@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <title>Team Performance Metrics - Cycle Time Analysis</title>
+
+  <!-- CDN Libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    [v-cloak]{display:none}
+    @keyframes indeterminate{0%{transform:translateX(-100%);}100%{transform:translateX(100%);}}
+    .progress-indeterminate>div{animation:indeterminate 1.5s infinite;}
+  </style>
+</head>
+<body class="bg-gray-100 p-4">
+
+<div id="app" v-cloak class="max-w-7xl mx-auto">
+   
+  <!-- NAV PANEL -->
+  <nav class="flex items-center justify-between flex-wrap bg-sky-400 rounded-xl p-6 mb-6">
+      <div class="flex items-center flex-shrink-0 text-white mr-6">
+    
+      <span class="font-semibold text-xl tracking-tight"><a href="index.html">Team Performance Metrics</a></span>
+      </div> 
+      <div class="w-full block flex-grow lg:flex lg:items-center lg:w-auto">
+      <div class="text-sm lg:flex-grow">
+          <a href="cycleTime.html" class="block mt-4 pt-1 lg:inline-block lg:mt-0 text-teal-200 hover:text-white mr-4">
+          Cycle Time
+          </a>
+          <a href="throughput.html" class="block mt-4 pt-1 lg:inline-block lg:mt-0 text-teal-200 hover:text-white mr-4">
+          Throughput
+          </a>
+          <a href="monte-carlo.html" class="block mt-4 pt-1 lg:inline-block lg:mt-0 text-teal-200 hover:text-white mr-4">
+          Monte Carlo Simulation
+          </a>
+          <a href="faq.html" class="block mt-4 pt-1 lg:inline-block lg:mt-0 text-teal-200 hover:text-white">
+          FAQ
+          </a>
+      </div>
+      </div>
+  </nav>
+
+  <!-- CONTROL PANEL -->
+  <div class="bg-white border border-slate-200 rounded-xl p-4 mb-6">
+    <h2 class="text-1xl font-bold mb-4">Cycle Time Analysis</h2>
+
+    <div class="flex flex-col md:flex-row md:items-end md:space-x-4 space-y-2 md:space-y-0">
+      <select v-model="selectedTeam" class="p-2 border rounded w-full md:w-64">
+        <option disabled value="">Team wählen …</option>
+        <option v-for="team in teams" :key="team.filterId" :value="team">{{ team.name }}</option>
+      </select>
+      <input type="date" v-model="dateFrom" class="p-2 border rounded" />
+      <input type="date" v-model="dateTo"   class="p-2 border rounded" />
+    </div>
+    <p class="text-gray-600 mt-3">{{ subline }}</p>
+  </div>
+
+  <!-- METRIC CARDS -->
+  <div class="grid md:grid-cols-3 gap-4 mb-6">
+    <div
+      v-for="card in cards"
+      :key="card.type"
+      :class="card.bg"
+      class="relative p-6 rounded-2xl shadow flex flex-col"
+    >
+      <h2 class="text-xl font-semibold mb-4">{{ card.type }}</h2>
+      <div class="grid grid-cols-2 gap-y-2 text-sm flex-1">
+        <div class="text-gray-600">Ø Tage</div><div class="font-medium">{{ metrics[card.type].mean }}</div>
+        <div class="text-gray-600">Median</div><div class="font-medium">{{ metrics[card.type].median }}</div>
+        <div class="text-gray-600">Max</div><div class="font-medium">{{ metrics[card.type].max }}</div>
+      </div>
+      <div class="absolute top-4 right-4 opacity-40 w-8 h-8">
+        <component :is="card.icon" />
+      </div>
+    </div>
+  </div>
+
+  <!-- PROGRESS BAR (keeps space) -->
+  <div class="h-2 mb-6">
+    <div v-show="loading" class="w-full h-full bg-gray-200 rounded overflow-hidden progress-indeterminate">
+      <div class="h-full bg-indigo-500 w-1/3"></div>
+    </div>
+  </div>
+
+  <!-- SCATTER PLOT -->
+  <canvas id="scatter" height="340"></canvas>
+  <p v-if="error" class="text-red-600 mt-6">{{ error }}</p>
+</div>
+
+<!-- ICON COMPONENTS -->
+<script>
+const ShieldExclamationIcon = { template:`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M12 2.25c-.5 0-1 .12-1.46.35l-6 3A1.5 1.5 0 0 0 4.5 7.88v4.1c0 5.15 3.7 9.9 7.46 10.77a1.5 1.5 0 0 0 .58 0c3.76-.87 7.46-5.62 7.46-10.77v-4.1a1.5 1.5 0 0 0-.84-1.32l-6-3A3 3 0 0 0 12 2.25Z'/><path stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M12 9v3m0 4h.01'/></svg>` };
+const DocumentTextIcon = { template:`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M16.5 3.75H7.5A2.25 2.25 0 0 0 5.25 6v12A2.25 2.25 0 0 0 7.5 20.25h9A2.25 2.25 0 0 0 18.75 18V6A2.25 2.25 0 0 0 16.5 3.75Z'/><path stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M9 7.5h6M9 12h6M9 16.5h3'/></svg>` };
+const UserIcon = { template:`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z'/><path stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M4.5 20.25a8.25 8.25 0 0 1 15 0'/></svg>` };
+</script>
+
+<!-- VUE APPLICATION -->
+<script>
+async function loadConfig(){
+  const res = await fetch('config.json');
+  if(!res.ok) throw new Error('config.json fehlt');
+  return res.json();
+}
+
+Vue.createApp({
+  components:{ ShieldExclamationIcon, DocumentTextIcon, UserIcon },
+  data(){
+    return {
+      teams:[],
+      selectedTeam:'',
+      dateFrom:'',
+      dateTo:'',
+      subline:'Bitte Team wählen.',
+      loading:false,
+      error:null,
+      jiraBase:'',
+      chart:null,
+      totalItems:0,
+      metrics:{
+        Task:{mean:'-',median:'-',max:'-'},
+        Story:{mean:'-',median:'-',max:'-'},
+        Bug:{mean:'-',median:'-',max:'-'}
+      },
+      cards:[
+        { type:'Story', bg:'bg-emerald-200', icon:'UserIcon' },
+        { type:'Task',  bg:'bg-sky-200',     icon:'DocumentTextIcon' },
+        { type:'Bug',   bg:'bg-red-300',     icon:'ShieldExclamationIcon' }
+      ]
+    };
+  },
+  async mounted(){
+    try{
+      const cfg = await loadConfig();
+      this.jiraBase = cfg.jiraBaseUrl;
+      this.teams    = cfg.teams;
+    }catch(e){ this.error = e.message; }
+  },
+  watch:{
+    selectedTeam(){ this.loadData(); },
+    dateFrom(){ this.loadData(); },
+    dateTo(){ this.loadData(); }
+  },
+  methods:{
+    fmt(date){
+      return date.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'});
+    },
+    /* ================= Load sequence ================= */
+    async loadData(){
+      if(!this.selectedTeam) return;
+      this.loading = true;
+      this.error   = null;
+      this.subline = 'Items werden geladen.';
+
+      // reset UI
+      ['Task','Story','Bug'].forEach(k => this.metrics[k] = { mean:'-', median:'-', max:'-' });
+      if(this.chart){ this.chart.destroy(); this.chart = null; }
+      this.renderChart({ Task:[], Story:[], Bug:[] });
+
+      try{
+        const issues   = await this.fetchAllIssues(this.selectedTeam.filterId);
+        this.totalItems = issues.length;
+
+        const groups   = this.extractCycles(issues);
+        const filtered = this.applyDateFilter(groups);
+
+        this.calcMetrics(filtered);
+        this.updateSubline(filtered);
+        this.renderChart(filtered);
+      }catch(e){
+        this.error = e.message;
+        this.subline = 'Fehler beim Laden.';
+      }finally{
+        this.loading = false;
+      }
+    },
+    /* ------------- Jira paging ------------- */
+    async fetchAllIssues(filterId){
+      let startAt = 0, total = 0, all = [];
+      do{
+        const url = `${this.jiraBase}/rest/api/3/search?jql=filter%3D${filterId}&startAt=${startAt}&maxResults=100&expand=changelog`;
+        const res = await fetch(url,{ credentials:'include' });
+        if(!res.ok) throw new Error(`Jira: ${res.status}`);
+        const data = await res.json();
+        all.push(...data.issues);
+        startAt += data.issues.length;
+        total    = data.total;
+      }while(startAt < total);
+      return all;
+    },
+    /* -------- Extract cycle times --------- */
+    extractCycles(issues){
+      const startStatus = { Task:'In Progress', Story:'In Development', Bug:'In Development' };
+      const groups = { Task:[], Story:[], Bug:[] };
+      issues.forEach(issue =>{
+        const type = issue.fields.issuetype?.name || 'Task';
+        if(!groups[type]) return;
+
+        let start = null, end = null;
+        (issue.changelog?.histories || []).forEach(h =>{
+          const t = new Date(h.created);
+          h.items.forEach(it =>{
+            if(it.field!=='status') return;
+            if(it.toString===startStatus[type]){
+              if(!start || t < start) start = t;
+            }
+            if(it.toString==='Closed'){
+              if(!end || t > end) end = t;
+            }
+          });
+        });
+        if(!start) return; // ignore if no valid start
+        if(!end) end = start;
+        const hours = Math.max(0,(end - start) / 36e5);
+        groups[type].push({ key:issue.key, closed:end, hours });
+      });
+      return groups;
+    },
+    /* --------- Date filter ---------- */
+    applyDateFilter(groups){
+      if(!this.dateFrom && !this.dateTo) return groups;
+      const from = this.dateFrom ? new Date(this.dateFrom)                : null;
+      const to   = this.dateTo   ? new Date(this.dateTo + 'T23:59:59')    : null;
+      const out  = { Task:[], Story:[], Bug:[] };
+      ['Task','Story','Bug'].forEach(k =>{
+        out[k] = groups[k].filter(o => (!from || o.closed >= from) && (!to || o.closed <= to));
+      });
+      return out;
+    },
+    /* -------- Metrics ------------- */
+    calcMetrics(groups){
+      const round = v => Math.round(v);
+      ['Task','Story','Bug'].forEach(k =>{
+        const vals = groups[k].map(o => o.hours).sort((a,b)=>a-b);
+        if(!vals.length){ this.metrics[k] = { mean:'-', median:'-', max:'-' }; return; }
+        const mean   = vals.reduce((s,v)=>s+v,0) / vals.length;
+        const median = vals.length % 2 ? vals[Math.floor(vals.length/2)] : (vals[vals.length/2-1]+vals[vals.length/2])/2;
+        this.metrics[k] = { mean:round(mean/24), median:round(median/24), max:round(vals[vals.length-1]/24) };
+      });
+    },
+    /* -------- Subline -------- */
+    updateSubline(groups){
+      const allUsed = [...groups.Task, ...groups.Story, ...groups.Bug];
+      const first   = allUsed.length ? new Date(Math.min(...allUsed.map(o=>o.closed))) : null;
+      const last    = allUsed.length ? new Date(Math.max(...allUsed.map(o=>o.closed))) : null;
+      if(!first){
+        this.subline = `${this.totalItems} Items insgesamt · Keine passenden Cycle-Times`;
+      }else{
+        this.subline = `${this.totalItems} Items insgesamt · ${allUsed.length} ausgewertet · Zeitraum ${this.fmt(first)} – ${this.fmt(last)}`;
+      }
+    },
+    /* ---------- Chart ------------ */
+    renderChart(groups){
+      const ctx = document.getElementById('scatter');
+      if(this.chart) this.chart.destroy();
+      const colors = { Story:'rgba(52,211,153,0.8)', Task:'rgba(56,189,248,0.8)', Bug:'rgba(252,165,165,0.8)' };
+      const datasets = ['Story','Task','Bug'].map(k => ({ label:k, data:groups[k].map(o => ({x:o.closed.getTime(), y:o.hours/24, issue:o.key})), backgroundColor:colors[k] }));
+      this.chart = new Chart(ctx,{ type:'scatter', data:{ datasets }, options:{ parsing:false, scales:{ x:{ type:'time', time:{ unit:'day' } }, y:{ title:{ display:true, text:'Cycle Time (Tage)'} } }, plugins:{ tooltip:{ callbacks:{ label:t=>`${t.raw.issue}: ${Math.round(t.raw.y)} Tage` } } } } });
+    }
+  }
+}).mount('#app');
+</script>
+
+</body>
+</html>

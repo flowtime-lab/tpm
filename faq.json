@@ -1,0 +1,114 @@
+﻿[
+  {
+    "group": "Allgemein",
+    "icon": "InformationCircleIcon",
+    "items": [
+      {
+        "q": "Authentifizierung",
+        "a": "Die App nutzt einfach den Jira-Session-Cookie, den dein Browser ohnehin bei jeder Anfrage an <code>*.atlassian.net</code> mitschickt. Solange du im selben Browser-Profil bei Jira eingeloggt bist, brauchst du kein API-Token."
+      },
+      {
+        "q": "CORS",
+        "a": "Weil die Seite lokal oder auf einer anderen Domain läuft, blockiert der Browser standard­mäßig Cross-Origin-Requests. Ein kleines CORS-Browser-Plug-in löst das Problem."
+      },
+      {
+        "q": "Welche Daten werden für die Auswertung verwendet?",
+        "a": "Die Anwendung bezieht die Daten direkt aus der JIRA-Instanz. Die Daten werden aus der JIRA-API über zuvor definierte Filter ermittelt und können dort entsprechend angepasst werden."
+      },
+      {
+        "q": "Wie aktuell sind die Daten?",
+        "a": "Sobald du auf „Daten laden“ klickst, werden sie live aus der Jira-API gezogen; der Bericht zeigt immer den aktuellen Stand des entsprechenden Filters des ausgewählten Team."
+      },
+      {
+        "q": "Warum spielt Item-Größe bei Cycle Time, Durchsatz und Monte Carlo keine Rolle?",
+        "a": "Die Reports arbeiten mit <b>empirischen Daten</b> – also mit dem, was in der Realität <i>wirklich</i> passiert ist, nicht mit theoretischen Schätzungen. Sie messen reale Durchlaufzeiten und abgeschlossene Items, unabhängig davon, wie groß diese vorher eingeschätzt wurden. Die Item-Größe ist deshalb <b>nicht relevant</b>. Durch diese Beobachtung des echten Flusses liefern die Metriken verlässliche Aussagen über Geschwindigkeit und Vorhersagbarkeit. Monte Carlo nutzt dabei die historische Verteilung der Daten und simuliert auf dieser Basis realistische Lieferwahrscheinlichkeiten. Alle drei Methoden funktionieren ohne Schätzaufwand – sie setzen auf <b>Transparenz durch tatsächliches Verhalten statt auf subjektive Prognosen.</b>"
+      },
+      {
+        "q": "Muss Urlaub oder Abwesenheit in den Daten berücksichtigt werden?",
+        "a": "Nein. Einzelne „dünne“ Wochen – etwa weil das halbe Team im Urlaub war oder krankheits­bedingt ausgefallen ist – erscheinen in der Zeitreihe einfach als Durchsatz = 0 oder ein sehr kleiner Wert. Da der Report aber eine lange Stichprobe empirischer Wochen auswertet, gehen solche Ausreißer in der Menge unter: Der Median dämpft sie automatisch ab, und der Durchschnitt stabilisiert sich, sobald genügend reguläre Wochen gegenüberstehen. Kurzfristige Abwesenheiten verzerren das Gesamtbild also kaum; sie werden statistisch genauso behandelt wie Wochen mit ungewöhnlich hoher Produktivität."
+      }
+    ]
+  },
+  {
+    "group": "Cycle Time",
+    "icon": "ClockIcon",
+    "items": [
+      {
+        "q": "Was ist die Cycle Time?",
+        "a": "Die Cycle Time misst, wie viele Kalendertage zwischen dem Start der eigentlichen Bearbeitung eines Items (bei uns der erste Wechsel nach <i>In Progress / In Development</i>) und dem Übergang auf Closed vergehen. Sie zeigt also, wie schnell ein Team Arbeit durch seinen “System” schiebt – unabhängig davon, wie lange das Item vorher im Backlog lag oder diskutiert wurde."
+      },
+      {
+        "q": "Wie wird die Cycle Time gemessen?",
+        "a": "Das Dashboard liest die Jira-Changelogs aus:<ol class=\"list-decimal\"><li><b>Start-Zeitstempel</b> → erster Status In Progress/In Development</li><li><b>End-Zeitstempel</b> → letzter Status Closed</li><li><b>Cycle Time</b> = (End − Start) in Tagen, gerundet auf Ganze</li></ol><p>Tickets ohne gültigen Start-Status werden ignoriert, damit die Zahlen nicht verzerrt werden.</p><p>Der Abzug läuft paginiert über die REST-API, d. h. alle Items eines Jira-Filters werden komplett ausgewertet – auch wenn das Diagramm nur einen Teil davon anzeigt.</p>"
+      },
+      {
+        "q": "Was unterscheidet Cycle Time von Story Points & Velocity?",
+        "a": "<ol class=\"list-decimal\"><li><b>Story Points</b> schätzen Aufwand vorab; <b>Cycle Time</b> misst realen Durchsatz hinterher.</li><li><b>Velocity</b> (Story Points / Sprint) sagt, wie viel “Menge” ein Team durchschnittlich liefert; Cycle Time sagt, wie schnell ein einzelnes Item den Prozess durchläuft.</li><li>Story Points können team- oder schätz-stilabhängig schwanken – Cycle Time basiert auf echten Kalendertagen auf Grundlage empirischer Daten.</li></ol>"
+      },
+      {
+        "q": "Warum ist Cycle Time eine gute Metrik?",
+        "a": "<ol class=\"list-decimal\"><li>Sie ist <b>objektiv</b>, basiert auf <b>empirischen</b> Daten und ist leicht nachzuverfolgen.</li><li>Kürzere Cycle Times korrelieren fast immer mit <b>schnellerer Wertlieferung</b> und <b>geringerer Kontextwechselbelastung</b>.</li><li>Sie eignet sich hervorragend für <b>Forecasts</b>: Mit einem stabilen Median kann man realistisch abschätzen, wann neue Anforderungen fertig werden.</li><li>Sie kann als <b>Ausgangspunkt zur gemeinsamen Reflexion</b> genutzt werden: <i>Was macht uns schneller/langsamer?</i> oder <i>Wie gehen wir mit Blockaden um?</i></li></ol>"
+      },
+      {
+        "q": "Wie interpretiere ich Median, Ø und Max im Dashboard?",
+        "a": "<ol class=\"list-decimal\"><li><b>Median</b> – der mittlere Wert in einer Folge von nach aufsteigender Größe sortierten Werten. Ober- bzw. unterhalb des Median liegt jeweils die Hälfte der Werte.</li><li><b>Ø (arithme­tischer Durchschnitt)</b> – gut, um Trends zu sehen; anfällig für Ausreißer.</li><li><b>Max</b> – zeigt, wie schlimm es “im Worst Case” wird; hilfreich, um Bottlenecks aufzuspüren.</li></ol>"
+      },
+      {
+        "q": "Was ist ein “guter” Cycle-Time-Wert?",
+        "a": "Eine pauschale Zahl gibt es nicht – sie hängt stark von Team-Größe, Domäne und Item-Zuschnitt ab und steht in Releation zum <b>Kontext und Ziel</b> des Teams. <p>Woran man eine <i>funktionale</i> Cycle Time erkennt:</p><ol class=\"list-decimal\"><li>Hat das Team eine relativ stabile Cycle Time über die letzten Wochen?</li><li>Gibt es Ausreißer, und kennt das Team deren Ursachen?</li><li>Arbeitet das Team mit wenigen parallelen Items?</li><li>Gibt es regelmäßige Fertigstellungen ohne Hektik?</li></ol><p>Wichtig ist vor allem den Trend: Wird der Median kürzer, bleiben Ausreißer seltener? Das ist entscheidender als ein einzelner Zielwert. Die Cycle Time ist gut, wenn sie den <i>Flow</i> des Teams unterstützt, nicht Stress erzeugt.</p><p>Dabei dürfen große Features auch mal länger brauchen. Nicht jedes Ticket muss in zwei Tagen durch sein. Eine „gute“ Cycle Time bringt <b>schnelles Lernen</b> und ist <b>verhältnismäßig</b> zum Aufwand und zur Art der Arbeit.</p>"
+      },
+      {
+        "q": "Wie kann ich die Cycle Time aktiv verkürzen?",
+        "a": "<ol class=\"list-decimal\"><li><b>Work in Progress (WIP) senken</b> - Weniger parallele Tickets = schnellere Durchlaufzeit</li><li><b>Kleinere, klar geschnittene Stories</b> – lieber mehr Items, die schneller fließen.</li><li><b>Definition-of-Ready & Definition-of-Done schärfen</b>, damit weniger Nacharbeiten nötig sind.</li><li><b>Blocker sichtbar und lösbar machen</b> - Blockierte Tickets explizit markieren und in Stand-ups immer fragen <i>„Was hindert uns am Weiterarbeiten?“</i></li><li><b>Automatische Tests & CI ausbauen</b> – jeder manuelle Schritt verlängert die Durchlaufzeit.</li><li><b>Slack-Zeiten einplanen</b> - Klingt paradox – aber wer ständig voll ausgelastet ist, <b>verlangsamt den Fluss.</b>.</li></ol>"
+      },
+      {
+        "q": "Wie passt die Cycle Time in unsere bestehenden Reports?",
+        "a": "<ol class=\"list-decimal\"><li>Für Scope-Manager und REs ergänzt sie die bekannten Velocity-Charts um eine <b>Flow-Sicht</b>.</li><li>Die Projektleitung bekommt einen Frühindikator für <b>mögliche Lieferrisiken</b> (spike im Median → Engpass).</li><li>Kombiniert mit Story-Points können wir “Menge & Geschwindigkeit” ausweisen: Velocity zeigt <b>Output pro Sprint</b>, Cycle Time zeigt <b>Durchlaufgeschwindigkeit einzelner Items</b>.</li></ol>"
+      }
+    ]
+  },
+  {
+    "group": "Throughput",
+    "icon": "TrendingUpIcon",
+    "items": [
+      {
+        "q": "Was ist Throughput?",
+        "a": "Der Durchsatz (Throughput) beschreibt, wie viele Issues ein Team pro Kalenderwoche tatsächlich auf „Done“ bringt. Er ist eine simple, aber sehr aussage­kräftige Menge-pro-Zeit-Kennzahl – ähnlich wie „Pakete pro Stunde“ auf einem Förderband."
+      },
+      {
+        "q": "Wie wird der Durchsatz gemessen?",
+        "a": "Die Anwendung holt per Jira-REST alle Issues ab, deren resolutiondate im gewählten Zeitraum liegt, und gruppiert sie nach ISO-Kalenderwoche. Jede Zeile der Tabelle zeigt also: KW XY / Jahr → <i>„so viele Tickets wurden in dieser Woche erledigt“</i>."
+      },
+      {
+        "q": "Was bedeuten Ø und Median?",
+        "a": "Ø ist der arithme­tische Durchschnitt aller Wochenwerte – hilfreich, um Trends zu sehen. Der Median ist der „Wert in der Mitte“ und weniger anfällig für Ausreißer (z. B. eine Urlaubs­woche mit nur 1 Ticket oder ein Bug-Flut mit 30 Tickets)."
+      }
+    ]
+  },
+  {
+    "group": "Monte Carlo Simulation",
+    "icon": "BeakerIcon",
+    "items": [
+      {
+        "q": "Was ist eine Monte-Carlo-Simulation?",
+        "a": "Das ist ein statistischer „Was-wäre-wenn“-Versuch: Statt einen einzelnen Mittelwert zu benutzen, wird pro Simulation zufällig echte Wochen-Durchsatzwerte gezogen – genauso, wie ein Würfel jedes Mal eine andere Zahl zeigt. So entsteht eine Verteilungskurve möglicher Zukunftsszenarien.<br><p><b>Wie funktioniert sie – in drei Sätzen?</b></p><ol class=\"list-decimal\"><li>Wir sammeln alle historischen Weekly-Throughput-Werte in einem Team.</li><li>Für jede Iteration wählen wir zufällig Wochenwerte und addieren sie, bis das Ziel erreicht ist – entweder ein fixes Datum <i>(„Wie viele Items schaffen wir?“)</i> oder eine fixe Stückzahl <i>(„Bis wann sind 50 Items fertig?“)</i>.</li><li>Zehn- bis dreißigtausend Wiederholungen liefern eine Häufigkeitsverteilung, die als Histogramm dargestellt wird.</li>"
+      },
+      {
+        "q": "Warum ist eine Monte-Carlo-Simulation hilfreich?",
+        "a": "Mit Monte-Carlo-Simulationen lassen sich Unsicherheiten modellieren und Wahrscheinlichkeiten für Liefertermine ermitteln."
+      },
+      {
+        "q": "Was bedeuten die farbigen Badges 95 / 85 / 70 / 50 %?",
+        "a": "Sie zeigen Konfidenz­niveaus: „Mit 95 % Wahr­schein­lichkeit schaffen wir bis Datum X mindestens Y Items“. Grün (95 %) ist sehr konservativ, Rot (50 %) ist die „Münzwurf-Chance“."
+      },
+      {
+        "q": "Wie viele Iterationen soll ich wählen?",
+        "a": "10.000 Iterationen liefern in der Regel eine stabile Kurve und dauern im Browser nur Sekunden. Auf 30.000 erhöhst du nur, wenn du ein sehr feines Histogramm oder extrem lange Vorhersagen brauchst – dann kann es je nach Rechner einige Sekunden länger laden."
+      },
+      {
+        "q": "Kann ich die Ergebnisse exportieren?",
+        "a": "Aktuell nein – die Daten bleiben im Browser und werden nach dem Refresh verworfen."
+      }
+    ]
+  }
+]

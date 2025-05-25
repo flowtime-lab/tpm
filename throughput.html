@@ -1,0 +1,192 @@
+﻿<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Team Performance Metrics - Throughput Report</title>
+
+    <!-- Tailwind CSS inkl. forms plugin -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+    <!-- Vue 3 (UMD) -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  </head>
+<body class="bg-gray-100 p-4">
+
+    <!-- Root App -->
+    <div id="app" class="max-w-7xl mx-auto">
+
+    <!-- NAV PANEL -->
+    <nav class="flex items-center justify-between flex-wrap bg-sky-400 rounded-xl p-6 mb-6">
+      <div class="flex items-center flex-shrink-0 text-white mr-6">
+    
+      <span class="font-semibold text-xl tracking-tight"><a href="index.html">Team Performance Metrics</a></span>
+      </div> 
+      <div class="w-full block flex-grow lg:flex lg:items-center lg:w-auto">
+      <div class="text-sm lg:flex-grow">
+          <a href="cycleTime.html" class="block mt-4 pt-1 lg:inline-block lg:mt-0 text-teal-200 hover:text-white mr-4">
+          Cycle Time
+          </a>
+          <a href="throughput.html" class="block mt-4 pt-1 lg:inline-block lg:mt-0 text-teal-200 hover:text-white mr-4">
+          Throughput
+          </a>
+          <a href="monte-carlo.html" class="block mt-4 pt-1 lg:inline-block lg:mt-0 text-teal-200 hover:text-white mr-4">
+          Monte Carlo Simulation
+          </a>
+          <a href="faq.html" class="block mt-4 pt-1 lg:inline-block lg:mt-0 text-teal-200 hover:text-white">
+          FAQ
+          </a>
+      </div>
+      </div>
+    </nav>
+
+    <!-- Auswahl-Panel -->
+      <div class="bg-white border border-slate-200 rounded-xl p-4 mb-6">
+        <h2 class="text-1xl font-bold mb-4">Throughput Report</h2>
+
+        <div class="grid md:grid-cols-3 gap-4 items-end">
+          <div>
+            <label class="block text-sm font-medium mb-1" for="team">Team</label>
+            <select id="team" v-model="selectedTeam" class="p-2 border rounded w-full">
+              <option disabled value="">Team wählen…</option>
+              <option v-for="t in teams" :key="t.filterId" :value="t">{{ t.name }}</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1" for="from">Von</label>
+            <input type="date" id="from" v-model="fromDate" class="p-2 border rounded w-full" min="2025-01-01" />
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1" for="to">Bis</label>
+            <input type="date" id="to" v-model="toDate" class="p-2 border rounded w-full" />
+          </div>
+        </div>
+        <button @click="fetchData" :disabled="!selectedTeam" class="px-4 py-2 bg-blue-600 text-white rounded-md disabled:opacity-50 mt-2">
+          Daten laden
+        </button>
+        <!-- Subline -->
+        <p class="text-sm text-gray-700 mt-3" v-if="sublineText">{{ sublineText }}</p>
+      </div>
+
+      <!-- Progress Bar Platzhalter -->
+      <div class="h-3">
+        <progress v-if="loading" class="w-full h-3" :value="progress" max="1"></progress>
+      </div>
+
+      <!-- Tabelle Panel -->
+      <div v-if="weekRows.length" class="bg-white border border-slate-200 rounded-xl p-4 mb-6">
+        <!-- Kopfzeile mit Kennzahlen rechts -->
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-lg font-semibold">Throughput nach Kalenderwoche</h2>
+          <div v-if="avg !== null" class="flex space-x-2">
+            <span class="px-3 py-1 bg-slate-100 text-gray-800 rounded text-xs">Ø {{ avg }}</span>
+            <span class="px-3 py-1 bg-slate-100 text-gray-800 rounded text-xs">Median {{ median }}</span>
+          </div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200 select-none">
+            <thead class="bg-gray-50">
+              <tr>
+                <th @click="toggleSort('label')" class="px-4 py-2 text-left text-sm font-semibold text-gray-700 cursor-pointer">
+                  Kalenderwoche <span v-if="sortKey==='label'">{{ sortAsc ? '▲' : '▼' }}</span>
+                </th>
+                <th @click="toggleSort('count')" class="px-4 py-2 text-left text-sm font-semibold text-gray-700 cursor-pointer">
+                  Throughput <span v-if="sortKey==='count'">{{ sortAsc ? '▲' : '▼' }}</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+              <tr v-for="row in displayRows" :key="row.label">
+                <td class="px-4 py-2 whitespace-nowrap">{{ row.label }}</td>
+                <td class="px-4 py-2">{{ row.count }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <p v-else-if="!loading" class="text-center text-gray-500">Noch keine Daten geladen.</p>
+    </div>
+
+    <!-- Vue-Logic -->
+    <script>
+      const tz = 'Europe/Berlin';
+      const toBerlin = iso => new Date(new Date(iso).toLocaleString('en-US',{timeZone:tz}));
+      const isoWeek=d=>{const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));t.setUTCDate(t.getUTCDate()+4-(t.getUTCDay()||7));return Math.ceil(((t-Date.UTC(t.getUTCFullYear(),0,1))/86400000+1)/7)};
+      const isoYear=d=>{const t=new Date(d);t.setDate(t.getDate()+4-(t.getDay()||7));return t.getFullYear()};
+      const fmt=d=>d.toLocaleDateString('de-DE',{timeZone:tz});
+
+      const {createApp, reactive, toRefs, computed} = Vue;
+      createApp({
+        setup(){
+          const s=reactive({
+            jiraBaseUrl:'',teams:[],selectedTeam:'',fromDate:'',toDate:'',
+            weekRows:[],loading:false,progress:0,issueCount:0,minDate:null,maxDate:null,
+            weekLabelTemplate:'KW {WW}/{YYYY}',sortKey:'label',sortAsc:false, // default latest first
+            avg:null,median:null,sublineText:''
+          });
+
+          // Config laden
+          fetch('config.json').then(r=>r.json()).then(c=>{
+            s.jiraBaseUrl=(c.jiraBaseUrl||'').replace(/\/$/,'');s.teams=c.teams||[];
+            if(c.weekLabel) s.weekLabelTemplate=c.weekLabel;
+          }).catch(e=>alert('config.json Fehler: '+e));
+
+          const displayRows=computed(()=>{
+            const rows=[...s.weekRows];
+            return rows.sort((a,b)=>{
+              if(s.sortKey==='label') return s.sortAsc? a.label.localeCompare(b.label): b.label.localeCompare(a.label);
+              return s.sortAsc? a.count-b.count: b.count-a.count;
+            });
+          });
+
+          function toggleSort(key){ s.sortKey===key? s.sortAsc=!s.sortAsc : (s.sortKey=key,s.sortAsc=true); }
+
+          async function fetchData(){
+            if(!s.selectedTeam||!s.jiraBaseUrl) return;
+            Object.assign(s,{loading:true,progress:0,weekRows:[],issueCount:0,minDate:null,maxDate:null,avg:null,median:null,sublineText:''});
+            const fid=s.selectedTeam.filterId; let jql=`filter=${fid}`;
+            if(s.fromDate) jql+=` AND resolutiondate >= "${s.fromDate}"`;
+            if(s.toDate)   jql+=` AND resolutiondate <= "${s.toDate} 23:59"`;
+            const counts={}, maxRes=100; let startAt=0,total=0;
+            try{
+              do{
+                const url=`${s.jiraBaseUrl}/rest/api/3/search?jql=${encodeURIComponent(jql)}&fields=resolutiondate&startAt=${startAt}&maxResults=${maxRes}`;
+                const res=await fetch(url,{credentials:'include'});
+                if(!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+                const data=await res.json(); total=data.total;
+                data.issues.forEach(({fields:{resolutiondate}})=>{
+                  if(!resolutiondate) return;
+                  const dt=toBerlin(resolutiondate);
+                  const key=`${isoYear(dt)}-${isoWeek(dt)}`;
+                  counts[key]=(counts[key]||0)+1; s.issueCount++;
+                  if(!s.minDate||dt<s.minDate) s.minDate=dt; if(!s.maxDate||dt>s.maxDate) s.maxDate=dt;
+                });
+                startAt+=data.issues.length; s.progress=total? startAt/total:1;
+              }while(startAt<total);
+
+              // Map to array
+              s.weekRows=Object.entries(counts).map(([k,c])=>{
+                const [y,w]=k.split('-').map(Number);
+                return {
+                  label:s.weekLabelTemplate.replace('{WW}',String(w).padStart(2,'0')).replace('{YYYY}',y),
+                  count:c
+                };
+              });
+
+              // Statistik
+              const arr=Object.values(counts);
+              if(arr.length){
+                const sum=arr.reduce((a,b)=>a+b,0); s.avg=Math.round((sum/arr.length)*10)/10;
+                const sorted=[...arr].sort((a,b)=>a-b); const mid=Math.floor(sorted.length/2);
+                s.median= arr.length%2 ? sorted[mid] : Math.round(((sorted[mid-1]+sorted[mid])/2)*10)/10;
+              }
+
+              // Subline
+              s.sublineText=`${s.issueCount} Aufgaben · Zeitraum ${s.minDate?fmt(s.minDate)+' – '+fmt(s.maxDate):'—'}`;
+            }catch(e){alert('Fehler: '+e.message);}finally{s.loading=false;s.progress=0;}
+          }
+
+          return {...toRefs(s),fetchData,displayRows,toggleSort};
+        }
+      }).mount('#app');
+    </script>
+  </body>
+</html>

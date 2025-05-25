@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <title>Team Performance Metrics</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-4">
+
+<div id="app" class="max-w-7xl mx-auto">
+   
+  <!-- NAV PANEL -->
+  <nav class="flex items-center justify-between flex-wrap bg-sky-400 rounded-xl p-6 mb-6">
+      <div class="flex items-center flex-shrink-0 text-white mr-6">
+    
+      <span class="font-semibold text-xl tracking-tight">Team Performance Metrics</span>
+      </div> 
+      <div class="w-full block flex-grow lg:flex lg:items-center lg:w-auto">
+      <div class="text-sm lg:flex-grow">
+          <a href="cycleTime.html" class="block mt-4 pt-1 lg:inline-block lg:mt-0 text-teal-200 hover:text-white mr-4">
+          Cycle Time
+          </a>
+          <a href="throughput.html" class="block mt-4 pt-1 lg:inline-block lg:mt-0 text-teal-200 hover:text-white mr-4">
+          Throughput
+          </a>
+          <a href="monte-carlo.html" class="block mt-4 pt-1 lg:inline-block lg:mt-0 text-teal-200 hover:text-white mr-4">
+          Monte Carlo Simulation
+          </a>
+          <a href="faq.html" class="block mt-4 pt-1 lg:inline-block lg:mt-0 text-teal-200 hover:text-white">
+          FAQ
+          </a>
+      </div>
+      </div>
+  </nav>
+
+  <!-- METRIC CARDS -->
+  <div class="grid md:grid-cols-3 gap-4 mb-6">
+    
+    <div class="max-w-sm rounded overflow-hidden shadow-lg">
+      <a href="cycleTime.html"><img class="w-full" src="/img/cycle-time.jpg" alt="Cycle Time"></a>
+      <div class="px-6 py-4">
+        <div class="font-bold text-xl mb-2">Cycle Time</div>
+        <p class="text-gray-700 text-base">
+          Cycle Time erfasst die Dauer vom Arbeitsbeginn bis zur Fertigstellung eines Items. Eine geringe Durchlaufzeit minimiert Feedback-Schleifen und macht Liefertermine planbarer.
+        </p>
+      </div>
+    </div>
+
+    <div class="max-w-sm rounded overflow-hidden shadow-lg">
+      <a href="throughput.html"><img class="w-full" src="/img/throughput.jpg" alt="Throughput"></a>
+      <div class="px-6 py-4">
+        <div class="font-bold text-xl mb-2">Throughput</div>
+        <p class="text-gray-700 text-base">
+          Throughput misst, wie viele Arbeitseinheiten ein Team pro Zeiteinheit abschlie&szlig;t. Ein stabiler Durchsatz macht Leistungsf&auml;higkeit sichtbar und erm&ouml;glicht realistische Kapazit&auml;ts- und Terminplanung.
+        </p>
+      </div>
+    </div>
+
+    <div class="max-w-sm rounded overflow-hidden shadow-lg">
+      <a href="monte-carlo.html"><img class="w-full" src="/img/monte-carlo.jpg" alt="Monte Carlo Simulation"></a>
+      <div class="px-6 py-4">
+        <div class="font-bold text-xl mb-2">Monte Carlo Simulation</div>
+        <p class="text-gray-700 text-base">
+          Die Monte-Carlo-Simulation nutzt historische Durchsatzdaten, um tausende Szenarien zu berechnen. Das liefert eine Verteilung verschiedener Wahrscheinlichkeiten f&uuml;r Liefertermine und macht Risiken quantifizierbar.
+        </p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+ 

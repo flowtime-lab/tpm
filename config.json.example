@@ -1,0 +1,8 @@
+{
+  "jiraBaseUrl": "https://your-domain.atlassian.net",
+  "weekLabel": "KW {WW}/{YYYY}",
+  "teams": [
+    { "name": "Team Alpha", "filterId": 12345 },
+    { "name": "Team Beta",  "filterId": 67890 }
+  ]
+}

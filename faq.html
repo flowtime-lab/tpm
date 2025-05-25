@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <title>Team Performance Metrics - FAQ</title>
+
+  <!-- Tailwind per CDN ------------------------------------------------------>
+  <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+
+<body class="bg-gray-100 p-4">
+  <div id="app" class="max-w-7xl mx-auto">
+
+    <!-- NAV PANEL -->
+    <nav class="flex items-center justify-between flex-wrap bg-sky-400 rounded-xl p-6 mb-6">
+      <div class="flex items-center flex-shrink-0 text-white mr-6">
+    
+      <span class="font-semibold text-xl tracking-tight"><a href="index.html">Team Performance Metrics</a></span>
+      </div> 
+      <div class="w-full block flex-grow lg:flex lg:items-center lg:w-auto">
+      <div class="text-sm lg:flex-grow">
+          <a href="cycleTime.html" class="block mt-4 pt-1 lg:inline-block lg:mt-0 text-teal-200 hover:text-white mr-4">
+          Cycle Time
+          </a>
+          <a href="throughput.html" class="block mt-4 pt-1 lg:inline-block lg:mt-0 text-teal-200 hover:text-white mr-4">
+          Throughput
+          </a>
+          <a href="monte-carlo.html" class="block mt-4 pt-1 lg:inline-block lg:mt-0 text-teal-200 hover:text-white mr-4">
+          Monte Carlo Simulation
+          </a>
+          <a href="faq.html" class="block mt-4 pt-1 lg:inline-block lg:mt-0 text-teal-200 hover:text-white">
+          FAQ
+          </a>
+      </div>
+      </div>
+  </nav>
+
+    <h1 class="text-3xl font-bold mb-8 text-center">FAQ</h1>
+
+    <!-- Vue-Komponente rendert hier -->
+    <faq-accordion />
+  </div>
+
+  <!-- Vue 3 per CDN --------------------------------------------------------->
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+
+  <!-- App ------------------------------------------------------------------>
+  <script type="module">
+    const { createApp, ref, reactive, onMounted, defineComponent, h } = Vue;
+
+    /* --------------------------------------------------------------------- *
+     *  Heroicons (Outline) – lokal eingebettet ▸ damit 100 % offline fähig   *
+     * --------------------------------------------------------------------- */
+    const icons = {
+      InformationCircleIcon: defineComponent({
+        render() {
+          return h('svg',
+            { xmlns:'http://www.w3.org/2000/svg', class:'w-6 h-6 flex-shrink-0 text-indigo-600',
+              fill:'none', viewBox:'0 0 24 24', stroke:'currentColor', 'stroke-width':'1.5' },
+            [ h('path', { 'stroke-linecap':'round', 'stroke-linejoin':'round', d:'M11.25 9.75h1.5m-1.5 4.5h1.5m-.75-12a9 9 0 100 18 9 9 0 000-18z' }) ]
+          );
+        }
+      }),
+      ClockIcon: defineComponent({
+        render() {
+          return h('svg',
+            { xmlns:'http://www.w3.org/2000/svg', class:'w-6 h-6 flex-shrink-0 text-indigo-600',
+              fill:'none', viewBox:'0 0 24 24', stroke:'currentColor', 'stroke-width':'1.5' },
+            [ h('path', { 'stroke-linecap':'round', 'stroke-linejoin':'round', d:'M12 6v6l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' }) ]
+          );
+        }
+      }),
+      TrendingUpIcon: defineComponent({
+        render() {
+          return h('svg',
+            { xmlns:'http://www.w3.org/2000/svg', class:'w-6 h-6 flex-shrink-0 text-indigo-600',
+              fill:'none', viewBox:'0 0 24 24', stroke:'currentColor', 'stroke-width':'1.5' },
+            [ h('path', { 'stroke-linecap':'round', 'stroke-linejoin':'round', d:'M3 17l6-6 4 4 8-8' }) ]
+          );
+        }
+      }),
+      BeakerIcon: defineComponent({
+        render() {
+          return h('svg',
+            { xmlns:'http://www.w3.org/2000/svg', class:'w-6 h-6 flex-shrink-0 text-indigo-600',
+              fill:'none', viewBox:'0 0 24 24', stroke:'currentColor', 'stroke-width':'1.5' },
+            [ h('path', { 'stroke-linecap':'round', 'stroke-linejoin':'round', d:'M18.375 2.25c-1.035 0-1.875.84-1.875 1.875v15.75c0 1.035.84 1.875 1.875 1.875h.75c1.035 0 1.875-.84 1.875-1.875V4.125c0-1.036-.84-1.875-1.875-1.875h-.75ZM9.75 8.625c0-1.036.84-1.875 1.875-1.875h.75c1.036 0 1.875.84 1.875 1.875v11.25c0 1.035-.84 1.875-1.875 1.875h-.75a1.875 1.875 0 0 1-1.875-1.875V8.625ZM3 13.125c0-1.036.84-1.875 1.875-1.875h.75c1.036 0 1.875.84 1.875 1.875v6.75c0 1.035-.84 1.875-1.875 1.875h-.75A1.875 1.875 0 0 1 3 19.875v-6.75Z' }) ]
+          );
+        }
+      })
+    };
+
+    /* --------------------------------------------------------------------- *
+     *  Accordion-Komponente                                                 *
+     * --------------------------------------------------------------------- */
+    const FaqAccordion = defineComponent({
+      name: 'FaqAccordion',
+      setup() {
+        const groups   = ref([]);                 // komplette JSON-Daten
+        const openIdx  = reactive({});            // { groupIndex: itemIndex|null }
+
+        // JSON laden
+        const load = async () => {
+          try {
+            const res = await fetch('./faq.json');
+            groups.value = await res.json();
+            groups.value.forEach((_, gi) => openIdx[gi] = null);
+          } catch (e) {
+            console.error('FAQ JSON konnte nicht geladen werden:', e);
+          }
+        };
+
+        // Accordion steuern
+        const toggle = (g, i) => {
+          openIdx[g] = openIdx[g] === i ? null : i;   // eine offene Frage pro Gruppe
+        };
+
+        onMounted(load);
+        return { groups, openIdx, toggle, icons };
+      },
+
+      // Render-Funktion (kompakt, damit keine Build-Tools nötig sind)
+      render() {
+        return h('div', {}, this.groups.map((group, gi) => {
+          const Icon = this.icons[group.icon] || null;
+
+          return h('section', { class:'mb-8' }, [
+            /* Zwischenüberschrift ------------------------------------------------*/
+            h('div', { class:'flex items-center bg-stone-100 border border-slate-400 rounded-xl p-4 mb-6' }, [
+              Icon ? h(Icon) : null,
+              h('h2', { class:'ml-2 text-xl font-semibold text-gray-800' }, group.group)
+            ]),
+
+            /* Alle Fragen dieser Gruppe ----------------------------------------*/
+            ...group.items.map((item, qi) => {
+              const open = this.openIdx[gi] === qi;
+
+              return h('div', { class:'border-b border-gray-200' }, [
+                /* Frage (Button) -----------------------------------------------*/
+                h('button',
+                  { class:'w-full flex justify-between items-center py-4 text-left focus:outline-none',
+                    onClick: () => this.toggle(gi, qi) },
+                  [
+                    h('span', { class:'font-medium', innerHTML: item.q }),
+                    h('svg',
+                      { class:`w-5 h-5 transform transition-transform duration-200 ${open ? 'rotate-180' : ''}`,
+                        xmlns:'http://www.w3.org/2000/svg', fill:'none', viewBox:'0 0 24 24',
+                        stroke:'currentColor', 'stroke-width':'1.5' },
+                      [ h('path', { 'stroke-linecap':'round', 'stroke-linejoin':'round', d:'M19.5 8.25l-7.5 7.5-7.5-7.5' }) ]
+                    )
+                  ]
+                ),
+
+                /* Antwort ------------------------------------------------------*/
+                h('div',
+                  { class:`duration-300 ${open ? '' : 'hidden'}` },
+                  [ h('div', { class:'py-2 text-gray-700 max-w-none prose', innerHTML: item.a }) ]
+                )
+              ]);
+            })
+          ]);
+        }));
+      }
+    });
+
+    /* --------------------------------------------------------------------- */
+    createApp({ components:{ FaqAccordion } }).mount('#app');
+  </script>
+</body>
+</html>
