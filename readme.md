@@ -55,20 +55,27 @@ Eine schlanke, rein client-seitige Web-App zur **Analyse des Teamerfolgs**:
 
 Weil die Seite lokal oder auf einer anderen Domain läuft, blockiert der Browser standard­mäßig Cross-Origin-Requests. CORS oder Cross-Origin Resource Sharing ist in modernen Browsern standardmäßig blockiert. Um CORS temporär für die Anfragen an die JIRA-API zu aktiveren, kann ein entsprechendes [Browser Plugin](https://chromewebstore.google.com/detail/allow-cors-access-control/lhobafahddgcelffkeicbaginigeejlf?hl=de) installiert werden. 
 
+Damit CORS vollständig für die Anfragen an die JIRA-API konfiguriert ist, müssen im CORS-Plugin folgende Einstellungen getroffen werden:
+
+* Access-Control-Allow-Credentials: `true`
+* Access-Control-Allow-Origin: `ORIGIN`
+* Allow CORS whitelisted domain(s): `*.atlassian.com`
+
 ---
 
-## Lokale Vorschau per einfachem Webserver
+## Lokale Installation per einfachem Python-Webserver
 
-1. Repository oder ZIP entpacken
-2. In das Verzeichnis wechseln, das `index.html` und `config.json` enthält
-3. Webserver starten (Python ≥ 3 ist praktisch überall vorinstalliert):
+1. Repository klonen oder Release-ZIP entpacken
+2. In das Verzeichnis wechseln, das `index.html` enthält
+3. `config.json.example` als `config.json` speichern und die Jira-URL und IDs für die Team-Filter anpassen.   
+4. Webserver starten ([Python](https://winpython.github.io) ≥ 3 ist praktisch überall vorinstalliert):
 
 ```bash
 # Verzeichnisinhalt über Port 8000 verfügbar machen
-python -m http.server 8000
+python -m http.server 8000 d C:\path\to\tpm\www
 ```
 
-4. Browser öffnen: [`http://localhost:8000/index.html`](http://localhost:8000/index.html)
-5. Jira-Tab offen lassen bzw. einloggen – dann Seite neu laden und Team auswählen.
+5. Browser öffnen: [`http://localhost:8000/index.html`](http://localhost:8000/index.html)
+6. Jira-Tab offen lassen bzw. einloggen – dann Seite neu laden und Team auswählen.
 
-Fertig! Die HTML-Datei ruft nun über euren Jira-Cookie die REST-API ab und zeigt die Cycle-Time-Analysen an.
+Fertig! Die HTML-Datei ruft nun über den Jira-Cookie die REST-API ab und zeigt die entsprechenden Daten zum ausgewählten Team an.
