@@ -8,7 +8,7 @@
   <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3"></script>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
 
   <style>
     [v-cloak]{display:none}
@@ -48,15 +48,27 @@
   <div class="bg-white border border-slate-200 rounded-xl p-4 mb-6">
     <h2 class="text-1xl font-bold mb-4">Cycle Time Analysis</h2>
 
-    <div class="flex flex-col md:flex-row md:items-end md:space-x-4 space-y-2 md:space-y-0">
-      <select v-model="selectedTeam" class="p-2 border rounded w-full md:w-64">
-        <option disabled value="">Team wählen …</option>
-        <option v-for="team in teams" :key="team.filterId" :value="team">{{ team.name }}</option>
-      </select>
-      <input type="date" v-model="dateFrom" class="p-2 border rounded" />
-      <input type="date" v-model="dateTo"   class="p-2 border rounded" />
+    <div class="grid md:grid-cols-3 gap-4 items-end">
+      <div>
+        <label class="block text-sm font-medium mb-1" for="team">Team</label>
+        <select id="team" v-model="selectedTeam" class="p-2 border rounded w-full">
+          <option disabled value="">Team wählen …</option>
+          <option v-for="team in teams" :key="team.filterId" :value="team">{{ team.name }}</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-sm font-medium mb-1" for="from">Von</label>
+        <input type="date" id="from" v-model="dateFrom" class="p-2 border rounded w-full" />
+      </div>
+      <div>    
+        <label class="block text-sm font-medium mb-1" for="to">Bis</label>
+        <input type="date" id="to" v-model="dateTo"   class="p-2 border rounded w-full" />
+      </div>
     </div>
-    <p class="text-gray-600 mt-3">{{ subline }}</p>
+    <button @click="loadData" :disabled="!selectedTeam" class="px-4 py-2 bg-blue-600 text-white rounded-md disabled:opacity-50 mt-2">
+      Daten laden
+    </button>
+    <p class="text-sm text-gray-600 mt-3">{{ subline }}</p>
   </div>
 
   <!-- METRIC CARDS -->
@@ -139,11 +151,11 @@ Vue.createApp({
       this.teams    = cfg.teams;
     }catch(e){ this.error = e.message; }
   },
-  watch:{
+  /*watch:{
     selectedTeam(){ this.loadData(); },
     dateFrom(){ this.loadData(); },
     dateTo(){ this.loadData(); }
-  },
+  },*/
   methods:{
     fmt(date){
       return date.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'});

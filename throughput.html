@@ -4,10 +4,9 @@
     <meta charset="UTF-8" />
     <title>Team Performance Metrics - Throughput Report</title>
 
-    <!-- Tailwind CSS inkl. forms plugin -->
+    <!-- CDN Libraries -->
     <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
-    <!-- Vue 3 (UMD) -->
-    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
   </head>
 <body class="bg-gray-100 p-4">
 
@@ -63,7 +62,7 @@
           Daten laden
         </button>
         <!-- Subline -->
-        <p class="text-sm text-gray-700 mt-3" v-if="sublineText">{{ sublineText }}</p>
+        <p class="text-sm text-gray-700 mt-3">{{ subline }}</p>
       </div>
 
       <!-- Progress Bar Platzhalter -->
@@ -120,7 +119,7 @@
             jiraBaseUrl:'',teams:[],selectedTeam:'',fromDate:'',toDate:'',
             weekRows:[],loading:false,progress:0,issueCount:0,minDate:null,maxDate:null,
             weekLabelTemplate:'KW {WW}/{YYYY}',sortKey:'label',sortAsc:false, // default latest first
-            avg:null,median:null,sublineText:''
+            avg:null,median:null,subline:'Bitte Team wählen.'
           });
 
           // Config laden
@@ -145,6 +144,7 @@
             const fid=s.selectedTeam.filterId; let jql=`filter=${fid}`;
             if(s.fromDate) jql+=` AND resolutiondate >= "${s.fromDate}"`;
             if(s.toDate)   jql+=` AND resolutiondate <= "${s.toDate} 23:59"`;
+            s.subline = 'Items werden geladen.';
             const counts={}, maxRes=100; let startAt=0,total=0;
             try{
               do{
@@ -180,7 +180,7 @@
               }
 
               // Subline
-              s.sublineText=`${s.issueCount} Aufgaben · Zeitraum ${s.minDate?fmt(s.minDate)+' – '+fmt(s.maxDate):'—'}`;
+              s.subline=`${s.issueCount} Aufgaben · Zeitraum ${s.minDate?fmt(s.minDate)+' – '+fmt(s.maxDate):'—'}`;
             }catch(e){alert('Fehler: '+e.message);}finally{s.loading=false;s.progress=0;}
           }
 

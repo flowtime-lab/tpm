@@ -4,11 +4,9 @@
     <meta charset="UTF-8" />
     <title>Team Performance Metrics – Monte‑Carlo Simulation</title>
 
-    <!-- Tailwind CSS (inkl. forms plugin) -->
+    <!-- CDN Libraries -->
     <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
-    <!-- Vue 3 -->
-    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
-    <!-- Chart.js 4 -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   </head>
 <body class="bg-gray-100 p-4">
@@ -47,13 +45,13 @@
         <div class="grid md:grid-cols-3 gap-4 items-end">
           <div>
             <label class="block text-sm font-medium mb-1" for="team">Team</label>
-            <select id="team" v-model="selectedTeam" class="w-full">
+            <select id="team" v-model="selectedTeam" class="p-2 border rounded w-full">
               <option disabled value="">Team wählen…</option>
               <option v-for="t in teams" :key="t.filterId" :value="t">{{ t.name }}</option>
             </select>
           </div>
           <div class="flex items-end space-x-2 md:col-span-2">
-            <button @click="loadData" :disabled="!selectedTeam" class="px-4 py-2 bg-blue-600 text-white rounded-md disabled:opacity-50">Daten abrufen</button>
+            <button @click="loadData" :disabled="!selectedTeam" class="px-4 py-2 bg-blue-600 text-white rounded-md disabled:opacity-50 mt-2">Daten laden</button>
             <span v-if="loadError" class="text-red-600 text-sm">{{ loadError }}</span>
           </div>
         </div>
@@ -62,37 +60,42 @@
         <template v-if="throughputs.length && !loadingData">
           <hr class="my-4 border-slate-200" />
           <div class="space-y-4">
-            <div>
-              <label class="block text-sm font-medium mb-1">Simulations‑Art</label>
-              <select v-model="simType" class="w-full md:w-1/2">
-                <option disabled value="">Art wählen…</option>
-                <option value="items">Wie viele Items bis Datum X?</option>
-                <option value="date">Bis wann sind N Items fertig?</option>
-              </select>
-            </div>
-
-            <!-- Eingaben je nach Typ -->
-            <div v-if="simType==='items'" class="grid md:grid-cols-3 gap-4 items-end">
+            
+            <div class="grid md:grid-cols-3 gap-4 items-end">
               <div>
+                <label class="block text-sm font-medium mb-1">Simulations‑Art</label>
+                <select v-model="simType" class="p-2 border rounded w-full">
+                  <option disabled value="">Art wählen…</option>
+                  <option value="items">Wie viele Items bis Datum X?</option>
+                  <option value="date">Bis wann sind N Items fertig?</option>
+                </select>
+              </div>
+              
+              <div v-if="simType==='items'">
                 <label class="block text-sm font-medium mb-1" for="start">Startdatum</label>
-                <input type="date" id="start" v-model="startDate" class="w-full" />
+                <input type="date" id="start" v-model="startDate" class="p-2 border rounded w-full" />
               </div>
-              <div>
+              <div v-if="simType==='items'">
                 <label class="block text-sm font-medium mb-1" for="end">Enddatum</label>
-                <input type="date" id="end" v-model="endDate" class="w-full" />
+                <input type="date" id="end" v-model="endDate" class="p-2 border rounded w-full" />
               </div>
-            </div>
-
-            <div v-if="simType==='date'" class="grid md:grid-cols-3 gap-4 items-end">
-              <div>
+              
+              <div v-if="simType==='date'">
                 <label class="block text-sm font-medium mb-1" for="start2">Startdatum</label>
-                <input type="date" id="start2" v-model="startDate" class="w-full" />
+                <input type="date" id="start2" v-model="startDate" class="p-2 border rounded w-full" />
               </div>
-              <div>
+              <div v-if="simType==='date'">
                 <label class="block text-sm font-medium mb-1" for="nitems">Ziel‑Items (N)</label>
-                <input type="number" id="nitems" v-model.number="targetItems" min="1" class="w-full" />
+                <input type="number" id="nitems" v-model.number="targetItems" min="1" class="p-2 border rounded w-full" />
               </div>
+            
             </div>
+          
+            
+
+            
+
+            
 
             <!-- Iterationen -->
             <div>
