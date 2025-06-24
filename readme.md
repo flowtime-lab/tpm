@@ -72,7 +72,7 @@ Damit CORS vollständig für die Anfragen an die JIRA-API konfiguriert ist, müs
 
 ```bash
 # Verzeichnisinhalt über Port 8000 verfügbar machen
-python -m http.server 8000 d C:\path\to\tpm\www
+python -m http.server 8000 -d C:\path\to\tpm\www
 ```
 
 5. Browser öffnen: [`http://localhost:8000/index.html`](http://localhost:8000/index.html)
