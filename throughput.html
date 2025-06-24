@@ -140,7 +140,7 @@
 
           async function fetchData(){
             if(!s.selectedTeam||!s.jiraBaseUrl) return;
-            Object.assign(s,{loading:true,progress:0,weekRows:[],issueCount:0,minDate:null,maxDate:null,avg:null,median:null,sublineText:''});
+            Object.assign(s,{loading:true,progress:0,weekRows:[],issueCount:0,minDate:null,maxDate:null,avg:null,median:null,subline:''});
             const fid=s.selectedTeam.filterId; let jql=`filter=${fid}`;
             if(s.fromDate) jql+=` AND resolutiondate >= "${s.fromDate}"`;
             if(s.toDate)   jql+=` AND resolutiondate <= "${s.toDate} 23:59"`;
